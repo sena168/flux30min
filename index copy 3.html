@@ -308,14 +308,6 @@
         color: #9ca3af;
       }
 
-      .history-download {
-        font-size: 0.7rem;
-        color: #93c5fd;
-        text-decoration: underline;
-        cursor: pointer;
-        align-self: flex-start;
-      }
-
       @media (max-width: 640px) {
         .app {
           border-radius: 16px;
@@ -353,9 +345,7 @@
               <div class="hint">
                 Tip: Press Ctrl+Enter (or ⌘+Enter) to generate.
               </div>
-              <div class="hint">
-                Every generation is auto-saved to history below.
-              </div>
+              <div class="hint">Click a history card to reuse its prompt.</div>
             </div>
             <div class="buttons">
               <button id="generateBtn">
@@ -381,7 +371,7 @@
         <div class="history-header">
           <span class="history-title">History</span>
           <span class="history-subtitle"
-            >Keeps last 30 images (this session only, each with UUID)</span
+            >Keeps last 30 images (this session only)</span
           >
         </div>
         <div class="history-grid" id="historyGrid">
@@ -411,19 +401,6 @@
 
       let currentImageSrc = null;
       let currentPromptText = null;
-      let currentImageId = null;
-
-      function generateUUID() {
-        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
-          return window.crypto.randomUUID();
-        }
-        // fallback – RFC4122-ish
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-          const r = (Math.random() * 16) | 0;
-          const v = c === 'x' ? r : (r & 0x3) | 0x8;
-          return v.toString(16);
-        });
-      }
 
       function setLoading(isLoading, msg) {
         if (isLoading) {
@@ -470,7 +447,7 @@
 
           const img = document.createElement('img');
           img.src = item.src;
-          img.alt = 'Generated image ' + item.id;
+          img.alt = 'Generated image ' + (index + 1);
 
           const promptDiv = document.createElement('div');
           promptDiv.className = 'history-prompt';
@@ -481,25 +458,13 @@
 
           const metaDiv = document.createElement('div');
           metaDiv.className = 'history-meta';
-          const shortId = item.id.slice(0, 8);
-          metaDiv.textContent = item.timestampLabel + ' · ' + shortId;
-
-          const downloadLink = document.createElement('a');
-          downloadLink.className = 'history-download';
-          downloadLink.textContent = 'Download (' + shortId + ')';
-          downloadLink.href = item.src;
-          downloadLink.download = item.id + '.png';
-          downloadLink.addEventListener('click', (e) => {
-            // don't trigger card click (reuse prompt) when just downloading
-            e.stopPropagation();
-          });
+          metaDiv.textContent = item.timestampLabel;
 
           card.appendChild(img);
           card.appendChild(promptDiv);
           card.appendChild(metaDiv);
-          card.appendChild(downloadLink);
 
-          // Clicking card (not the download link) reuses its prompt
+          // Clicking a history card reuses its prompt
           card.addEventListener('click', () => {
             promptInput.value = item.prompt;
             promptInput.focus();
@@ -510,8 +475,8 @@
         });
       }
 
-      function addToHistory(id, src, prompt) {
-        if (!id || !src || !prompt) return;
+      function addToHistory(src, prompt) {
+        if (!src || !prompt) return;
 
         const now = new Date();
         const time = now.toLocaleTimeString([], {
@@ -521,7 +486,7 @@
         const timestampLabel = 'Saved at ' + time;
 
         // newest first
-        historyItems.unshift({ id, src, prompt, timestampLabel });
+        historyItems.unshift({ src, prompt, timestampLabel });
 
         // cap at MAX_HISTORY (drop oldest)
         if (historyItems.length > MAX_HISTORY) {
@@ -541,13 +506,11 @@
         placeholder.style.display = 'none';
         resultImage.style.display = 'none';
         resultImage.removeAttribute('src');
-        delete resultImage.dataset.id;
         setStatus('');
         setLoading(true, 'Waiting for FLUX to render…');
 
         currentPromptText = prompt;
         currentImageSrc = null;
-        currentImageId = null;
 
         const url =
           FLUX_ENDPOINT + encodeURIComponent(prompt) + '&t=' + Date.now();
@@ -558,12 +521,9 @@
           resultImage.style.display = 'block';
 
           currentImageSrc = resultImage.src;
-          const id = generateUUID();
-          currentImageId = id;
-          resultImage.dataset.id = id;
 
           // Auto-save to history on successful generation
-          addToHistory(id, currentImageSrc, currentPromptText);
+          addToHistory(currentImageSrc, currentPromptText);
         };
 
         resultImage.onerror = () => {
@@ -574,7 +534,6 @@
           );
           placeholder.style.display = 'block';
           currentImageSrc = null;
-          currentImageId = null;
         };
 
         resultImage.src = url;
