@@ -285,3 +285,190 @@
     .history-item img {
       width: 100%;
       border-radius: 8px;
+      display: block;
+    }
+
+    .history-prompt {
+      font-size: 0.75rem;
+      color: #d1d5db;
+      max-height: 3.3em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-meta {
+      font-size: 0.7rem;
+      color: #9ca3af;
+    }
+
+    @media (max-width: 640px) {
+      .app {
+        border-radius: 16px;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="app">
+      <div class="header">
+        <div class="title-block">
+          <div class="title">Satu Jam Saja</div>
+          <div class="subtitle">Gratis Flux Generator, satu jam saja, now or never</div>
+        </div>
+        <div class="badge">Endpoint: Modal · FLUX.1 [schnell]</div>
+      </div>
+
+      <div class="input-section">
+        <label for="prompt">Prompt</label>
+        <textarea
+          id="prompt"
+          placeholder="Example: ultra-detailed cinematic shot of a cyberpunk Jakarta street market at night, neon lights, rain, shallow depth of field"
+        ></textarea>
+
+        <div class="controls">
+          <div class="controls-left">
+            <div class="hint">Tip: Press Ctrl+Enter (or ⌘+Enter) to generate.</div>
+            <div class="hint">
+              Every generation is auto-saved below. Right-click an image → “Save image as…”
+            </div>
+          </div>
+          <div class="buttons">
+            <button id="generateBtn">
+              <span class="spinner" id="spinner" style="display:none;"></span>
+              <span id="buttonText">Generate</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="output" id="output">
+        <div class="placeholder" id="placeholder">
+          Your FLUX image will appear here. <br />
+          Add a prompt and hit <strong>Generate</strong>.
+        </div>
+        <img id="resultImage" alt="" style="display:none;" />
+        <div class="status" id="status" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- HISTORY UNDER MAIN CONTAINER -->
+    <div class="history" id="history">
+      <div class="history-header">
+        <span class="history-title">History</span>
+        <span class="history-subtitle">
+          Keeps last 30 images (this session only, each with UUID label)
+        </span>
+      </div>
+      <div class="history-grid" id="historyGrid">
+        <div class="history-empty" id="historyEmpty">
+          No images yet. Every new generation is automatically saved here.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const FLUX_ENDPOINT =
+      "https://thedevs-org--flux-schnell-api-fluxapi-generate.modal.run/?prompt=";
+
+    const promptInput = document.getElementById("prompt");
+    const generateBtn = document.getElementById("generateBtn");
+    const spinner = document.getElementById("spinner");
+    const buttonText = document.getElementById("buttonText");
+    const resultImage = document.getElementById("resultImage");
+    const statusEl = document.getElementById("status");
+    const placeholder = document.getElementById("placeholder");
+    const historyGrid = document.getElementById("historyGrid");
+    const historyEmpty = document.getElementById("historyEmpty");
+
+    const MAX_HISTORY = 30;
+    const historyItems = [];
+
+    let currentImageSrc = null;
+    let currentPromptText = null;
+    let currentImageId = null;
+
+    function generateUUID() {
+      if (window.crypto && typeof window.crypto.randomUUID === "function") {
+        return window.crypto.randomUUID();
+      }
+      // fallback – RFC4122-ish
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
+    }
+
+    function setLoading(isLoading, msg) {
+      if (isLoading) {
+        spinner.style.display = "inline-block";
+        buttonText.textContent = "Generating…";
+        generateBtn.disabled = true;
+        statusEl.style.display = "inline-block";
+        statusEl.textContent = msg || "Calling FLUX endpoint…";
+      } else {
+        spinner.style.display = "none";
+        buttonText.textContent = "Generate";
+        generateBtn.disabled = false;
+      }
+    }
+
+    function setStatus(msg, isError = false) {
+      if (!msg) {
+        statusEl.style.display = "none";
+        return;
+      }
+      statusEl.style.display = "inline-block";
+      statusEl.textContent = msg;
+      if (isError) {
+        statusEl.classList.add("error");
+      } else {
+        statusEl.classList.remove("error");
+      }
+    }
+
+    function renderHistory() {
+      historyGrid.innerHTML = "";
+
+      if (historyItems.length === 0) {
+        historyGrid.appendChild(historyEmpty);
+        historyEmpty.style.display = "block";
+        return;
+      }
+
+      historyEmpty.style.display = "none";
+
+      historyItems.forEach((item, index) => {
+        const card = document.createElement("div");
+        card.className = "history-item";
+
+        const img = document.createElement("img");
+        img.src = item.src;
+        img.alt = "Generated image " + item.id;
+
+        const promptDiv = document.createElement("div");
+        promptDiv.className = "history-prompt";
+        promptDiv.textContent =
+          item.prompt.length > 120
+            ? item.prompt.slice(0, 117) + "…"
+            : item.prompt;
+
+        const metaDiv = document.createElement("div");
+        metaDiv.className = "history-meta";
+        const shortId = item.id.slice(0, 8);
+        metaDiv.textContent = item.timestampLabel + " · UUID: " + shortId;
+
+        card.appendChild(img);
+        card.appendChild(promptDiv);
+        card.appendChild(metaDiv);
+
+        // Clicking card reuses its prompt (no new generation until user hits Generate)
+        card.addEventListener("click", () => {
+          promptIn
