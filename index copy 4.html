@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Satu Jam Saja – FLUX Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        background: radial-gradient(
+          circle at top,
+          #1f2933 0,
+          #020617 55%,
+          #000 100%
+        );
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          sans-serif;
+        color: #e5e7eb;
+        padding: 20px 10px;
+      }
+
+      .page {
+        width: 100%;
+        max-width: 900px;
+      }
+
+      .app {
+        width: 100%;
+        background: rgba(15, 23, 42, 0.96);
+        border-radius: 20px;
+        padding: 24px 26px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75);
+        border: 1px solid rgba(148, 163, 184, 0.3);
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .title-block {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+      }
+
+      .subtitle {
+        font-size: 0.85rem;
+        color: #9ca3af;
+      }
+
+      .badge {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.6);
+        color: #9ca3af;
+        white-space: nowrap;
+      }
+
+      label {
+        display: block;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: #9ca3af;
+        margin-bottom: 6px;
+      }
+
+      textarea {
+        width: 100%;
+        resize: vertical;
+        min-height: 80px;
+        max-height: 200px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(75, 85, 99, 0.8);
+        background: rgba(15, 23, 42, 0.9);
+        color: #e5e7eb;
+        font-size: 0.95rem;
+        line-height: 1.4;
+        outline: none;
+      }
+
+      textarea:focus {
+        border-color: #38bdf8;
+        box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.6);
+      }
+
+      .controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+
+      .controls-left {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.75rem;
+        color: #9ca3af;
+      }
+
+      .buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .hint {
+        font-size: 0.75rem;
+        color: #9ca3af;
+      }
+
+      button {
+        border: none;
+        border-radius: 999px;
+        padding: 8px 16px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        background: linear-gradient(135deg, #06b6d4, #4f46e5);
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 10px 30px rgba(37, 99, 235, 0.45);
+        white-space: nowrap;
+      }
+
+      button:disabled {
+        opacity: 0.65;
+        cursor: default;
+        box-shadow: none;
+      }
+
+      button span.spinner {
+        width: 14px;
+        height: 14px;
+        border-radius: 999px;
+        border: 2px solid rgba(248, 250, 252, 0.45);
+        border-top-color: transparent;
+        animation: spin 0.7s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .output {
+        margin-top: 12px;
+        border-radius: 14px;
+        background: radial-gradient(circle at top left, #1f2937 0, #020617 60%);
+        border: 1px solid rgba(55, 65, 81, 0.9);
+        padding: 10px;
+        position: relative;
+        min-height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .output img {
+        max-width: 100%;
+        max-height: 420px;
+        border-radius: 10px;
+        display: block;
+        margin: 0 auto;
+      }
+
+      .placeholder {
+        text-align: center;
+        font-size: 0.85rem;
+        color: #9ca3af;
+        padding: 16px;
+      }
+
+      .status {
+        position: absolute;
+        left: 10px;
+        bottom: 10px;
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.85);
+        color: #e5e7eb;
+        border: 1px solid rgba(148, 163, 184, 0.6);
+      }
+
+      .error {
+        color: #fecaca;
+        border-color: rgba(248, 113, 113, 0.9) !important;
+      }
+
+      /* History section */
+
+      .history {
+        margin-top: 20px;
+        max-height: 420px; /* scroll if too tall */
+        overflow-y: auto;
+        padding-right: 4px;
+      }
+
+      .history::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .history::-webkit-scrollbar-thumb {
+        background: rgba(75, 85, 99, 0.8);
+        border-radius: 999px;
+      }
+
+      .history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .history-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #e5e7eb;
+      }
+
+      .history-subtitle {
+        font-size: 0.75rem;
+        color: #9ca3af;
+      }
+
+      .history-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+      }
+
+      .history-empty {
+        font-size: 0.8rem;
+        color: #9ca3af;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px dashed rgba(75, 85, 99, 0.8);
+        text-align: center;
+      }
+
+      .history-item {
+        background: rgba(15, 23, 42, 0.9);
+        border-radius: 12px;
+        border: 1px solid rgba(55, 65, 81, 0.9);
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        cursor: pointer;
+        transition: transform 0.1s ease, box-shadow 0.1s ease,
+          border-color 0.1s ease;
+      }
+
+      .history-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+        border-color: rgba(56, 189, 248, 0.8);
+      }
+
+      .history-item img {
+        width: 100%;
+        border-radius: 8px;
+        display: block;
+      }
+
+      .history-prompt {
+        font-size: 0.75rem;
+        color: #d1d5db;
+        max-height: 3.3em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .history-meta {
+        font-size: 0.7rem;
+        color: #9ca3af;
+      }
+
+      .history-download {
+        font-size: 0.7rem;
+        color: #93c5fd;
+        text-decoration: underline;
+        cursor: pointer;
+        align-self: flex-start;
+      }
+
+      @media (max-width: 640px) {
+        .app {
+          border-radius: 16px;
+        }
+
+        .header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="app">
+        <div class="header">
+          <div class="title-block">
+            <div class="title">Satu Jam Saja</div>
+            <div class="subtitle">
+              Gratis Flux Generator, satu jam saja, now or never
+            </div>
+          </div>
+          <div class="badge">Endpoint: Modal · FLUX.1 [schnell]</div>
+        </div>
+
+        <div class="input-section">
+          <label for="prompt">Prompt</label>
+          <textarea
+            id="prompt"
+            placeholder="Example: ultra-detailed cinematic shot of a cyberpunk Jakarta street market at night, neon lights, rain, shallow depth of field"
+          ></textarea>
+
+          <div class="controls">
+            <div class="controls-left">
+              <div class="hint">
+                Tip: Press Ctrl+Enter (or ⌘+Enter) to generate.
+              </div>
+              <div class="hint">
+                Every generation is auto-saved to history below.
+              </div>
+            </div>
+            <div class="buttons">
+              <button id="generateBtn">
+                <span class="spinner" id="spinner" style="display: none"></span>
+                <span id="buttonText">Generate</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="output" id="output">
+          <div class="placeholder" id="placeholder">
+            Your FLUX image will appear here. <br />
+            Add a prompt and hit <strong>Generate</strong>.
+          </div>
+          <img id="resultImage" alt="" style="display: none" />
+          <div class="status" id="status" style="display: none"></div>
+        </div>
+      </div>
+
+      <!-- HISTORY UNDER MAIN CONTAINER -->
+      <div class="history" id="history">
+        <div class="history-header">
+          <span class="history-title">History</span>
+          <span class="history-subtitle"
+            >Keeps last 30 images (this session only, each with UUID)</span
+          >
+        </div>
+        <div class="history-grid" id="historyGrid">
+          <div class="history-empty" id="historyEmpty">
+            No images yet. Every new generation is automatically saved here.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const FLUX_ENDPOINT =
+        'https://thedevs-org--flux-schnell-api-fluxapi-generate.modal.run/?prompt=';
+
+      const promptInput = document.getElementById('prompt');
+      const generateBtn = document.getElementById('generateBtn');
+      const spinner = document.getElementById('spinner');
+      const buttonText = document.getElementById('buttonText');
+      const resultImage = document.getElementById('resultImage');
+      const statusEl = document.getElementById('status');
+      const placeholder = document.getElementById('placeholder');
+      const historyGrid = document.getElementById('historyGrid');
+      const historyEmpty = document.getElementById('historyEmpty');
+
+      const MAX_HISTORY = 30;
+      const historyItems = [];
+
+      let currentImageSrc = null;
+      let currentPromptText = null;
+      let currentImageId = null;
+
+      function generateUUID() {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+          return window.crypto.randomUUID();
+        }
+        // fallback – RFC4122-ish
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+          const r = (Math.random() * 16) | 0;
+          const v = c === 'x' ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        });
+      }
+
+      function setLoading(isLoading, msg) {
+        if (isLoading) {
+          spinner.style.display = 'inline-block';
+          buttonText.textContent = 'Generating…';
+          generateBtn.disabled = true;
+          statusEl.style.display = 'inline-block';
+          statusEl.textContent = msg || 'Calling FLUX endpoint…';
+        } else {
+          spinner.style.display = 'none';
+          buttonText.textContent = 'Generate';
+          generateBtn.disabled = false;
+        }
+      }
+
+      function setStatus(msg, isError = false) {
+        if (!msg) {
+          statusEl.style.display = 'none';
+          return;
+        }
+        statusEl.style.display = 'inline-block';
+        statusEl.textContent = msg;
+        if (isError) {
+          statusEl.classList.add('error');
+        } else {
+          statusEl.classList.remove('error');
+        }
+      }
+
+      function renderHistory() {
+        historyGrid.innerHTML = '';
+
+        if (historyItems.length === 0) {
+          historyGrid.appendChild(historyEmpty);
+          historyEmpty.style.display = 'block';
+          return;
+        }
+
+        historyEmpty.style.display = 'none';
+
+        historyItems.forEach((item, index) => {
+          const card = document.createElement('div');
+          card.className = 'history-item';
+
+          const img = document.createElement('img');
+          img.src = item.src;
+          img.alt = 'Generated image ' + item.id;
+
+          const promptDiv = document.createElement('div');
+          promptDiv.className = 'history-prompt';
+          promptDiv.textContent =
+            item.prompt.length > 120
+              ? item.prompt.slice(0, 117) + '…'
+              : item.prompt;
+
+          const metaDiv = document.createElement('div');
+          metaDiv.className = 'history-meta';
+          const shortId = item.id.slice(0, 8);
+          metaDiv.textContent = item.timestampLabel + ' · ' + shortId;
+
+          const downloadLink = document.createElement('a');
+          downloadLink.className = 'history-download';
+          downloadLink.textContent = 'Download (' + shortId + ')';
+          downloadLink.href = item.src;
+          downloadLink.download = item.id + '.png';
+          downloadLink.addEventListener('click', (e) => {
+            // don't trigger card click (reuse prompt) when just downloading
+            e.stopPropagation();
+          });
+
+          card.appendChild(img);
+          card.appendChild(promptDiv);
+          card.appendChild(metaDiv);
+          card.appendChild(downloadLink);
+
+          // Clicking card (not the download link) reuses its prompt
+          card.addEventListener('click', () => {
+            promptInput.value = item.prompt;
+            promptInput.focus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+
+          historyGrid.appendChild(card);
+        });
+      }
+
+      function addToHistory(id, src, prompt) {
+        if (!id || !src || !prompt) return;
+
+        const now = new Date();
+        const time = now.toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        const timestampLabel = 'Saved at ' + time;
+
+        // newest first
+        historyItems.unshift({ id, src, prompt, timestampLabel });
+
+        // cap at MAX_HISTORY (drop oldest)
+        if (historyItems.length > MAX_HISTORY) {
+          historyItems.pop();
+        }
+
+        renderHistory();
+      }
+
+      function generateImage() {
+        const prompt = promptInput.value.trim();
+        if (!prompt) {
+          alert('Please enter a prompt first.');
+          return;
+        }
+
+        placeholder.style.display = 'none';
+        resultImage.style.display = 'none';
+        resultImage.removeAttribute('src');
+        delete resultImage.dataset.id;
+        setStatus('');
+        setLoading(true, 'Waiting for FLUX to render…');
+
+        currentPromptText = prompt;
+        currentImageSrc = null;
+        currentImageId = null;
+
+        const url =
+          FLUX_ENDPOINT + encodeURIComponent(prompt) + '&t=' + Date.now();
+
+        resultImage.onload = () => {
+          setLoading(false);
+          setStatus('Done.');
+          resultImage.style.display = 'block';
+
+          currentImageSrc = resultImage.src;
+          const id = generateUUID();
+          currentImageId = id;
+          resultImage.dataset.id = id;
+
+          // Auto-save to history on successful generation
+          addToHistory(id, currentImageSrc, currentPromptText);
+        };
+
+        resultImage.onerror = () => {
+          setLoading(false);
+          setStatus(
+            'Failed to load image. The endpoint might be down, busy, or blocked.',
+            true
+          );
+          placeholder.style.display = 'block';
+          currentImageSrc = null;
+          currentImageId = null;
+        };
+
+        resultImage.src = url;
+      }
+
+      generateBtn.addEventListener('click', generateImage);
+
+      // Ctrl+Enter / Cmd+Enter shortcut
+      promptInput.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          e.preventDefault();
+          generateImage();
+        }
+      });
+
+      // initial history render
+      renderHistory();
+    </script>
+  </body>
+</html>
