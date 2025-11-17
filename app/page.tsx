@@ -158,8 +158,8 @@ export default function Page() {
         <div className='header'>
           <div className='title-block'>
             <div className='title'>
-              <img src="/satujam.png" alt="Satu Jam Saja Logo" width="32" height="32" style={{verticalAlign: 'middle', marginRight: '10px'}} />
-              Satu Jam Saja
+              <img src="/satujam.png" alt="Fluke of Flux Logo" width="32" height="32" style={{verticalAlign: 'middle', marginRight: '10px'}} />
+              Fluke of Flux
             </div>
             <div className='subtitle'>
               one hour only free generator, now or never!
