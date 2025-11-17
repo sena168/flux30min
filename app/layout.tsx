@@ -4,6 +4,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Satu Jam Saja – FLUX Generator',
   description: 'one hour only free generator, now or never!',
+  icons: {
+    icon: '/satujamico.png',
+  },
 };
 
 export default function RootLayout({
